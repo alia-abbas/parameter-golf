@@ -502,7 +502,7 @@ class RMSNorm(nn.Module):
         super().__init__()
         self.eps = eps
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor, x0: Tensor, value_embed: Tensor | None = None) -> Tensor:
         return F.rms_norm(x, (x.size(-1),), eps=self.eps)
 
 
@@ -640,6 +640,8 @@ class Block(nn.Module):
         mix = self.resid_mix.to(dtype=x.dtype)
         x = mix[0][None, None, :] * x + mix[1][None, None, :] * x0
         attn_out = self.attn(self.attn_norm(x))
+        if value_embed is not None:
+            attn_out = attn_out + value_embed
         x = x + self.attn_scale.to(dtype=x.dtype)[None, None, :] * attn_out
         x = x + self.mlp_scale.to(dtype=x.dtype)[None, None, :] * self.mlp(self.mlp_norm(x))
         return x
@@ -667,6 +669,10 @@ class GPT(nn.Module):
         self.tied_embed_init_std = tied_embed_init_std
         self.logit_softcap = logit_softcap
         self.tok_emb = nn.Embedding(vocab_size, model_dim)
+	# Value embeddings (5 tables for layers 1,2,7,8,9)
+        self.value_embeds = nn.Parameter(
+            0.01 * torch.randn(5 * vocab_size, model_dim, dtype=torch.bfloat16)
+        )
         self.num_encoder_layers = num_layers // 2
         self.num_decoder_layers = num_layers - self.num_encoder_layers
         self.num_skip_weights = min(self.num_encoder_layers, self.num_decoder_layers)
@@ -702,15 +708,22 @@ class GPT(nn.Module):
         x = F.rms_norm(x, (x.size(-1),))
         x0 = x
         skips: list[Tensor] = []
-
+	# Value embeddings for specific layers
+        ve = self.value_embeds.view(5, self.vocab_size, -1)[:, input_ids]
+        ve_layers = [None, ve[0], ve[1]] + [None] * (self.num_layers - 6) + [ve[2], ve[3], ve[4]]
+	
         # First half stores skips; second half reuses them in reverse order.
         for i in range(self.num_encoder_layers):
-            x = self.blocks[i](x, x0)
+            ve_i = ve_layers[i] if i < len(ve_layers) else None
+            x = self.blocks[i](x, x0, ve_i)
             skips.append(x)
         for i in range(self.num_decoder_layers):
             if skips:
                 x = x + self.skip_weights[i].to(dtype=x.dtype)[None, None, :] * skips.pop()
-            x = self.blocks[self.num_encoder_layers + i](x, x0)
+            block_idx = self.num_encoder_layers + i
+            ve_i = ve_layers[block_idx] if block_idx < len(ve_layers) else None
+            x = self.blocks[block_idx](x, x0, ve_i)
+            
 
         x = self.final_norm(x).reshape(-1, x.size(-1))
         targets = target_ids.reshape(-1)
