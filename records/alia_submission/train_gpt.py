@@ -33,7 +33,7 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from flash_attn import flash_attn_func as flash_attn_3_func
+#from flash_attn import flash_attn_func as flash_attn_3_func
 
 # -----------------------------
 # HYPERPARAMETERS
@@ -624,7 +624,7 @@ class CausalSelfAttention(nn.Module):
         q = apply_rotary_emb(q, cos, sin)
         k = apply_rotary_emb(k, cos, sin)
         q = q * self.q_gain.to(dtype=q.dtype)[None, None, :, None]
-        y = flash_attn_3_func(q, k, v, causal=True)
+        y = F.scaled_dot_product_attention(q, k, v, is_causal=True) #y = flash_attn_3_func(q, k, v, causal=True)
         if self.use_xsa:
             y = self._xsa_efficient(y, v)
         y = y.reshape(bsz, seqlen, dim)
