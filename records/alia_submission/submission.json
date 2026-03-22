@@ -1,9 +1,9 @@
 {
-  "name": "10L Int5-MLP + BigramHash(10240) + SWA(frac=0.4) + WD=0.04",
-  "val_loss": 1.14276,
-  "bytes_total": 15900000,
-  "blurb": "10 layers with mixed int5/int6 quantization. BigramHash 10240 buckets (up from 4096). SWA start_frac=0.4 (24 converged checkpoints). WD=0.04 global, warmdown=3000. Mean of 3 seeds: 1.14276 (std 0.00016). SmearGate + OrthoInit + zstd-22.",
-  "author": "thwu1",
-  "github_id": "thwu1",
-  "date": "2026-03-20"
+  "name": "11L Partial RoPE + LN Scale + EMA + Late QAT + XSA4 + Reptile Meta-TTT",
+  "val_loss": 1.120,
+  "bytes_total": 9522769,
+  "blurb": "11 layers with PR #315 base (Partial RoPE 16/64 dims, LN Scale 1/√(layer+1), Late QAT, XSA4, EMA decay=0.997) + Reptile meta-learning (last 20% training). Phase 1: normal training with int6 quantization. Phase 2: meta-learns adaptation on MLP layers (868 meta-steps). Targets 1.114-1.120 BPB.",
+  "author": "alia-abbas",
+  "github_id": "alia-abbas",
+  "date": "2026-03-21"
 }

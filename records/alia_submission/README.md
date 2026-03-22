@@ -97,3 +97,4 @@ Conservative estimate: Beat #1 by **0.02-0.03 BPB**
 ## Attribution
 - Base architecture: PR #315 (@jfprincz) - Partial RoPE, LN Scale, Late QAT, XSA4, EMA
 - Reptile meta-TTT concept: PR #296 (@sseanliu) - Meta-learning for test-time adaptation
+- Competition framework: OpenAI Parameter Golf Challenge
