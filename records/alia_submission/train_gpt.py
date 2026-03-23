@@ -664,8 +664,8 @@ class CausalSelfAttention(nn.Module):
         k = apply_rotary_emb(k, cos, sin)
         q = q * self.q_gain.to(dtype=q.dtype)[None, None, :, None]
         if HAS_FA3:
-            print("USING FA3")
-            y = flash_attn_3_func(q, k, v, causal=True)
+            logger.info("USING FA3") 
+            y = flash_attn_func(q, k, v, causal=True)
         else:
             y = fallback_attention(q, k, v)
         if self.use_xsa:
