@@ -664,11 +664,10 @@ class CausalSelfAttention(nn.Module):
         k = apply_rotary_emb(k, cos, sin)
         q = q * self.q_gain.to(dtype=q.dtype)[None, None, :, None]
         if HAS_FA3:
+            print("USING FA3")
             y = flash_attn_3_func(q, k, v, causal=True)
         else:
-            y = torch.nn.functional.scaled_dot_product_attention(
-                q, k, v, is_causal=True
-        )
+            y = fallback_attention(q, k, v)
         if self.use_xsa:
             y = self._xsa_efficient(y, v)
         y = y.reshape(bsz, seqlen, dim)
