@@ -664,12 +664,11 @@ class CausalSelfAttention(nn.Module):
         k = apply_rotary_emb(k, cos, sin)
         q = q * self.q_gain.to(dtype=q.dtype)[None, None, :, None]
         if HAS_FA3:
-            logger.info("USING FA3") 
+            if not torch._dynamo.is_compiling():
+                print("USING FA3")
             y = flash_attn_func(q, k, v, causal=True)
         else:
             y = fallback_attention(q, k, v)
-        if self.use_xsa:
-            y = self._xsa_efficient(y, v)
         y = y.reshape(bsz, seqlen, dim)
         return self.proj(y)
 
