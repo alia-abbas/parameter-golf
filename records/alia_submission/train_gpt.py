@@ -32,8 +32,12 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from flash_attn import flash_attn_func as flash_attn_3_func
-
+try:
+    from flash_attn import flash_attn_func as flash_attn_3_func
+    HAS_FA3 = True
+except ImportError:
+    flash_attn_3_func = None
+    HAS_FA3 = False
 
 # -----------------------------
 # HYPERPARAMETERS
