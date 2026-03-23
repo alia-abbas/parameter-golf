@@ -32,12 +32,8 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-try:
-    from flash_attn import flash_attn_func as flash_attn_3_func
-    HAS_FA3 = True
-except ImportError:
-    flash_attn_3_func = None
-    HAS_FA3 = False
+
+from flash_attn import flash_attn_func as flash_attn_3_func
 
 # -----------------------------
 # HYPERPARAMETERS
@@ -663,12 +659,7 @@ class CausalSelfAttention(nn.Module):
         q = apply_rotary_emb(q, cos, sin)
         k = apply_rotary_emb(k, cos, sin)
         q = q * self.q_gain.to(dtype=q.dtype)[None, None, :, None]
-        if HAS_FA3:
-            if not torch._dynamo.is_compiling():
-                print("USING FA3")
-            y = flash_attn_func(q, k, v, causal=True)
-        else:
-            y = fallback_attention(q, k, v)
+        y = flash_attn_func(q, k, v, causal=True)
         y = y.reshape(bsz, seqlen, dim)
         return self.proj(y)
 
