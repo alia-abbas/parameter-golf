@@ -32,7 +32,12 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from flash_attn import flash_attn_func as flash_attn_3_func
+#from flash_attn import flash_attn_func as flash_attn_3_func
+try:
+    from flash_attn_interface import flash_attn_func
+    print("FLASH_ATTN_INTERFACE: OK")
+except Exception as e:
+    print("FLASH_ATTN_INTERFACE: FAIL", e)
 # -----------------------------
 # HYPERPARAMETERS
 # -----------------------------
@@ -1110,6 +1115,10 @@ def main() -> None:
     enable_flash_sdp(True)
     enable_mem_efficient_sdp(False)
     enable_math_sdp(False)
+
+    print("FLASH SDP:", torch.backends.cuda.flash_sdp_enabled())
+    print("MEM EFF SDP:", torch.backends.cuda.mem_efficient_sdp_enabled())
+    print("MATH SDP:", torch.backends.cuda.math_sdp_enabled())
 
     logfile = None
     if master_process:
