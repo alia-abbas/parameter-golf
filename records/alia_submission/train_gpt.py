@@ -34,10 +34,13 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 #from flash_attn import flash_attn_func as flash_attn_3_func
 try:
-    from flash_attn_interface import flash_attn_func
+    from flash_attn_interface import flash_attn_func as flash_attn_3_func
+    HAS_FA3 = True
     print("FLASH_ATTN_INTERFACE: OK")
 except Exception as e:
+    HAS_FA3 = False
     print("FLASH_ATTN_INTERFACE: FAIL", e)
+
 # -----------------------------
 # HYPERPARAMETERS
 # -----------------------------
@@ -662,7 +665,12 @@ class CausalSelfAttention(nn.Module):
         q = apply_rotary_emb(q, cos, sin)
         k = apply_rotary_emb(k, cos, sin)
         q = q * self.q_gain.to(dtype=q.dtype)[None, None, :, None]
-        y = flash_attn_3_func(q, k, v, causal=True)
+        if HAS_FA3:
+            y = flash_attn_3_func(q, k, v, causal=True)
+        else:
+            y = torch.nn.functional.scaled_dot_product_attention(
+                q, k, v, is_causal=True
+        )
         if self.use_xsa:
             y = self._xsa_efficient(y, v)
         y = y.reshape(bsz, seqlen, dim)
