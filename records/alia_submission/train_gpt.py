@@ -32,13 +32,8 @@ import torch.nn.functional as F
 from torch import Tensor, nn
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-try:
-    from flash_attn import flash_attn_func as flash_attn_3_func
-    HAS_FA3 = True
-    print("FLASH_ATTN_INTERFACE: OK")
-except Exception as e:
-    HAS_FA3 = False
-    print("FLASH_ATTN_INTERFACE: FAIL", e)
+from flash_attn import flash_attn_func as flash_attn_3_func
+
 
 # -----------------------------
 # HYPERPARAMETERS
