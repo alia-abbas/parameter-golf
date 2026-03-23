@@ -1,9 +1,16 @@
 {
-  "name": "",
-  "val_loss": ,
-  "bytes_total": ,
+  "name": "",,
   "blurb": "",
   "author": "alia-abbas",
   "github_id": "alia-abbas",
-  "date": "2026-03-22"
+  "date": "2026-03-22",
+  "val_loss": ,
+  "val_bpb": ,
+  "pre_quant_val_loss": 1,
+  "pre_quant_val_bpb": ,
+  "int6_zstd_val_loss": ,
+  "int6_zstd_val_bpb": ,
+  "bytes_total": ,
+  "bytes_model_int6_zstd": ,
+  "bytes_code": 
 }
